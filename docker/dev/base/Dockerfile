@@ -28,7 +28,8 @@ ARG BASE_IMAGE=ubuntu:jammy
 # hadolint ignore=DL3006
 FROM --platform=${BUILDPLATFORM:-linux/amd64} ${BASE_IMAGE} AS bocarepo
 # Git URL of the BOCA repository to clone from (default: cassiopc/boca)
-ARG REPOSITORY=https://github.com/cassiopc/boca.git
+#ARG REPOSITORY=https://github.com/cassiopc/boca.git
+ARG REPOSITORY=https://github.com/elvitin/boca.git
 # The branch, tag or SHA to point to in the cloned BOCA repository
 ARG REF=master
 # Using ARG to set ENV
@@ -37,9 +38,9 @@ ENV ENV_REF=$REF
 
 # hadolint ignore=DL3008,DL3015
 RUN apt-get -y update \
-    && apt-get -y install \
-        git \
-    && rm -rf /var/lib/apt/lists/*
+  && apt-get -y install \
+  git \
+  && rm -rf /var/lib/apt/lists/*
 WORKDIR /
 RUN git clone "${ENV_REPOSITORY}"
 WORKDIR /boca
@@ -90,32 +91,32 @@ USER root
 # Install dependencies
 # hadolint ignore=DL3005,DL3008,DL3015
 RUN apt-get -y update \
-    && apt-get -y dist-upgrade \
-    && apt-get -y install \
-        # Miscellaneous
-        locales \
-        tzdata \
-        # Package: boca-common
-        # https://github.com/cassiopc/boca/blob/master/debian/control
-        # Pre-Depends:
-        debconf \
-        makepasswd \
-        sharutils \
-        # Depends:
-        libany-uri-escape-perl \
-        openssl \
-        php-cli \
-        php-gd \
-        php-pgsql \
-        php-xml \
-        php-zip \
-        postgresql-client \
-        wget \
-    && rm -rf /var/lib/apt/lists/*
+  && apt-get -y dist-upgrade \
+  && apt-get -y install \
+  # Miscellaneous
+  locales \
+  tzdata \
+  # Package: boca-common
+  # https://github.com/cassiopc/boca/blob/master/debian/control
+  # Pre-Depends:
+  debconf \
+  makepasswd \
+  sharutils \
+  # Depends:
+  libany-uri-escape-perl \
+  openssl \
+  php-cli \
+  php-gd \
+  php-pgsql \
+  php-xml \
+  php-zip \
+  postgresql-client \
+  wget \
+  && rm -rf /var/lib/apt/lists/*
 
 RUN echo "Setting time zone to '${TZ}'" ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
-    && echo $TZ > /etc/timezone \
-    && echo "Etc/UTC" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata
+  && echo $TZ > /etc/timezone \
+  && echo "Etc/UTC" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata
 
 # Copy BOCA repository from base image
 COPY --from=bocarepo --chown="$APACHE_RUN_USER:$APACHE_RUN_GROUP" /boca/doc /var/www/boca/doc
@@ -129,25 +130,25 @@ COPY --chown="$APACHE_RUN_USER:$APACHE_RUN_GROUP" boca/src/private/createdb.php 
 
 WORKDIR /var/www/boca
 RUN \
-    # install-bocawww
-    # https://github.com/cassiopc/boca/blob/master/Makefile
-    mkdir -p /usr/sbin /etc/cron.d /var/www/boca/ \
-    # Done above
-    # && cp -r src /var/www/boca/ \
-    # Docs not necessary
-	# && cp -r doc /var/www/boca/ \
-    && install tools/boca-fixssh /usr/sbin/ \
-    && install tools/cron-boca-fixssh /etc/cron.d/ \
-    && chmod 700 /usr/sbin/boca-fixssh \
-    # install-bocacommon
-    # https://github.com/cassiopc/boca/blob/master/Makefile
-    && mkdir -p /usr/sbin/ \
-    && mkdir -p /etc/ \
-    && cp tools/boca.conf /etc/ \
-    && install tools/boca-config-dbhost.sh /usr/sbin/boca-config-dbhost \
-    && chmod 700 /usr/sbin/boca-config-dbhost \
-    # boca-common.postinst
-    # https://github.com/cassiopc/boca/blob/master/debian/boca-common.postinst
-    && chmod 600 /var/www/boca/src/private/conf.php
-    # Done above
-    # && chown "$APACHE_RUN_USER:$APACHE_RUN_GROUP" /var/www/boca/src/private/conf.php
+  # install-bocawww
+  # https://github.com/cassiopc/boca/blob/master/Makefile
+  mkdir -p /usr/sbin /etc/cron.d /var/www/boca/ \
+  # Done above
+  # && cp -r src /var/www/boca/ \
+  # Docs not necessary
+  # && cp -r doc /var/www/boca/ \
+  && install tools/boca-fixssh /usr/sbin/ \
+  && install tools/cron-boca-fixssh /etc/cron.d/ \
+  && chmod 700 /usr/sbin/boca-fixssh \
+  # install-bocacommon
+  # https://github.com/cassiopc/boca/blob/master/Makefile
+  && mkdir -p /usr/sbin/ \
+  && mkdir -p /etc/ \
+  && cp tools/boca.conf /etc/ \
+  && install tools/boca-config-dbhost.sh /usr/sbin/boca-config-dbhost \
+  && chmod 700 /usr/sbin/boca-config-dbhost \
+  # boca-common.postinst
+  # https://github.com/cassiopc/boca/blob/master/debian/boca-common.postinst
+  && chmod 600 /var/www/boca/src/private/conf.php
+# Done above
+# && chown "$APACHE_RUN_USER:$APACHE_RUN_GROUP" /var/www/boca/src/private/conf.php
